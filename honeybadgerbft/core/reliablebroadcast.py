@@ -5,6 +5,7 @@ import gevent
 import zfec
 import hashlib
 import math
+import time 
 
 
 #####################
@@ -129,7 +130,7 @@ def merkleVerify(N, val, roothash, branch, index):
         print("Verification failed with", hash(val), roothash, branch, tmp == roothash)
         return False
     return True
-
+ 
 
 def reliablebroadcast(sid, pid, N, f, leader, input, receive, send):
     """Reliable broadcast
@@ -195,6 +196,7 @@ def reliablebroadcast(sid, pid, N, f, leader, input, receive, send):
             send(i, o)
 
     if pid == leader:
+        # print('the first rbc:',time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime()))
         # The leader erasure encodes the input, sending one strip to each participant
         m = input()  # block until an input is received
         # XXX Python 3 related issue, for now let's tolerate both bytes and
@@ -217,7 +219,7 @@ def reliablebroadcast(sid, pid, N, f, leader, input, receive, send):
     stripes = defaultdict(lambda: [None for _ in range(N)])
     echoCounter = defaultdict(lambda: 0)
     echoSenders = set()  # Peers that have sent us ECHO messages
-    ready = defaultdict(set)
+    ready = defaultdict(set) 
     readySent = False
     readySenders = set()  # Peers that have sent us READY messages
 
@@ -239,6 +241,7 @@ def reliablebroadcast(sid, pid, N, f, leader, input, receive, send):
             (_, roothash, branch, stripe) = msg
             if sender != leader:
                 print("VAL message from other than leader:", sender)
+                print("this is the sender and leader",sender,leader)
                 continue
             try:
                 assert merkleVerify(N, stripe, roothash, branch, pid)

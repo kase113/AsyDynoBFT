@@ -11,7 +11,7 @@ from gevent.queue import Queue
 import logging
 import traceback
 from ctypes import c_bool
-
+ 
 # Network node class: deal with socket communications
 class NetworkClient (Process):
 
@@ -53,6 +53,8 @@ class NetworkClient (Process):
         while not self.stop.value:
             try:
                 for j in range(self.N):
+                # for j in range(4, 8):
+                    # di = j % self.N
                     if not self.is_out_sock_connected[j]:
                         self.is_out_sock_connected[j] = self._connect(j)
                 if all(self.is_out_sock_connected):
@@ -73,6 +75,7 @@ class NetworkClient (Process):
 
     def _connect(self, j: int):
         sock = socket.socket()
+        # print('this is my port and j', self.port, j)
         if self.ip == '127.0.0.1':
             sock.bind((self.ip, self.port + j + 1))
         try:

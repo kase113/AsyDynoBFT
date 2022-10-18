@@ -50,6 +50,9 @@ def _test_dumbo(N=8, f=2, seed=None):
     # Generate threshold sig keys for thld f+1
     sPK1, sSK1s = dealer(N, N - f, seed=seed)
 
+    # Generate threshold sig keys for thld f+1
+    sPK2, sSK2s = dealer(N, N - f, seed=seed)
+
     # Generate threshold enc keys
     ePK, eSKs = tpke.dealer(N, f+1)
 
@@ -68,7 +71,7 @@ def _test_dumbo(N=8, f=2, seed=None):
 
     for i in range(N):
         dumbos[i] = Dumbo(sid, i, B, N, f,
-                                    sPK, sSKs[i], sPK1, sSK1s[i], ePK, eSKs[i],
+                                    sPK, sSKs[i], sPK1, sSK1s[i], sPK2, sSK2s[i], ePK, eSKs[i],
                                     sends[i], recvs[i], K)
         #print(sPK, sSKs[i], ePK, eSKs[i])
 
@@ -79,7 +82,7 @@ def _test_dumbo(N=8, f=2, seed=None):
             dumbos[i].submit_tx('<[Dummy TX %d]>' % (i+10*r))
 
     for i in range(N):
-        threads[i] = gevent.spawn(dumbos[i].run)
+        threads[i] = gevent.spawn(dumbos[i].run_bft)
 
 
 

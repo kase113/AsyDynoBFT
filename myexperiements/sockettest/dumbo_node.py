@@ -38,11 +38,11 @@ def load_key(id, N):
 
     with open(os.getcwd() + '/keys-' + str(N) + '/' + 'eSK-' + str(id) + '.key', 'rb') as fp:
         eSK = pickle.load(fp)
-
+ 
     return sPK, sPK1, sPK2s, ePK, sSK, sSK1, sSK2, eSK
-
+ 
 class DumboBFTNode (Dumbo):
-
+  
     def __init__(self, sid, id, B, N, f, bft_from_server: Callable, bft_to_client: Callable, ready: mpValue, stop: mpValue, K=3, mode='debug', mute=False, debug=False, bft_running: mpValue=mpValue(c_bool, False), tx_buffer=None):
         self.sPK, self.sPK1, self.sPK2s, self.ePK, self.sSK, self.sSK1, self.sSK2, self.eSK = load_key(id, N)
         self.bft_from_server = bft_from_server
@@ -70,7 +70,7 @@ class DumboBFTNode (Dumbo):
             pass
             # TODO: submit transactions through tx_buffer
         self.logger.info('node id %d completed the loading of dummy TXs' % (self.id))
-
+ 
     def run(self):
 
         pid = os.getpid()

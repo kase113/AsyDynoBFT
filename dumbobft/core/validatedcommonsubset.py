@@ -150,6 +150,7 @@ def validatedcommonsubset(sid, pid, N, f, PK, SK, PK1, SK1, PK2s, SK2, input, de
     #print("node %d collects enough proofs to input VABA" % pid)
 
     vaba_input.put_nowait(tuple(values))
+    print('this is the vaba_output:', list(vaba_output.get()))
     decide(list(vaba_output.get()))
 
     if logger != None:

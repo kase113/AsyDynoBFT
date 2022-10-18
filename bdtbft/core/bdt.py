@@ -21,7 +21,7 @@ from bdtbft.core.twovalueagreement import twovalueagreement
 from dumbobft.core.validatedcommonsubset import validatedcommonsubset
 from dumbobft.core.provablereliablebroadcast import provablereliablebroadcast
 from dumbobft.core.dumbocommonsubset import dumbocommonsubset
-from honeybadgerbft.core.honeybadger_block import honeybadger_block
+from dumbobft.core.honeybadger_block import honeybadger_block
 from crypto.threshsig.boldyreva import serialize, deserialize1
 from crypto.threshsig.boldyreva import TBLSPrivateKey, TBLSPublicKey
 from crypto.ecdsa.ecdsa import PrivateKey
@@ -574,7 +574,7 @@ class Bdt():
                                vacs_output.get)
 
             _output = honeybadger_block(pid, self.N, self.f, self.ePK, self.eSK,
-                                        propose=json.dumps(tx_to_send),
+                                        propose_in=json.dumps(tx_to_send),
                                         acs_put_in=my_prbc_input.put_nowait, acs_get_out=dumboacs_thread.get,
                                         tpke_bcast=tpke_bcast, tpke_recv=tpke_recv.get)
 

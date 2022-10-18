@@ -1,9 +1,10 @@
 import json
 import traceback, time
 import gevent
-import numpy as np
+import numpy as np 
 from collections import namedtuple, deque
 from enum import Enum
+from gevent import Greenlet
 from gevent.queue import Queue
 from honeybadgerbft.core.commoncoin import shared_coin
 from honeybadgerbft.core.binaryagreement import binaryagreement
@@ -66,9 +67,9 @@ class HoneyBadgerBFT():
     :param send:
     :param recv:
     :param K: a test parameter to specify break out after K rounds
-    """
+    """ 
 
-    def __init__(self, sid, pid, B, N, f, sPK, sSK, ePK, eSK, send, recv, K=3, logger=None, mute=False):
+    def __init__(self, sid, pid, B, N, f, sPK, sSK, ePK, eSK, send, recv, K, logger, mute=False):
         self.sid = sid
         self.id = pid
         self.B = B
@@ -102,7 +103,7 @@ class HoneyBadgerBFT():
         #if self.logger != None: self.logger.info('Backlogged tx at Node %d:' % self.id + str(tx))
         self.transaction_buffer.append(tx)
 
-    def run(self):
+    def run_bft(self):
         """Run the HoneyBadgerBFT protocol."""
 
         if self.mute:
@@ -136,8 +137,27 @@ class HoneyBadgerBFT():
 
                 # Buffer this message
                 self._per_round_recv[r].put_nowait((sender, msg))
+        def _recv_loop():
+            """Receive messages."""
+            #print("start recv loop...")
+            while True:
+                #gevent.sleep(0)
+                try:
+                    (sender, (r, msg) ) = self._recv()
+                    #self.logger.info('recv1' + str((sender, o)))
+                    #print('recv1' + str((sender, o)))
+                    # Maintain an *unbounded* recv queue for each epoch
+                    if r not in self._per_round_recv:
+                        self._per_round_recv[r] = Queue()
+                    # Buffer this message
+                    self._per_round_recv[r].put_nowait((sender, msg))
+                except:
+                    continue
 
-        self._recv_thread = gevent.spawn(_recv)
+        # self._recv_thread = gevent.spawn(_recv)
+
+        self._recv_thread = Greenlet(_recv_loop)
+        self._recv_thread.start()
 
         self.s_time = time.time()
         if self.logger != None: self.logger.info('Node %d starts to run at time:' % self.id + str(self.s_time))
@@ -159,6 +179,7 @@ class HoneyBadgerBFT():
             for _ in range(self.B):
                 tx_to_send.append(self.transaction_buffer.popleft())
 
+            
             # TODO: Wait a bit if transaction buffer is not full
 
             # Run the round
@@ -167,9 +188,11 @@ class HoneyBadgerBFT():
                     self._send(j, (r, o))
                 return _send
 
-            send_r = _make_send(r)
+            send_r = _make_send(r) 
             recv_r = self._per_round_recv[r].get
+            # print('this is the recv_r', recv_r)
             new_tx = self._run_round(r, tx_to_send, send_r, recv_r)
+            # print('new_tx:',new_tx)
 
             #print('new block at %d:' % self.id, new_tx)
             if self.logger != None:
@@ -236,8 +259,8 @@ class HoneyBadgerBFT():
         rbc_outputs = [Queue(1) for _ in range(N)]
 
         my_rbc_input = Queue(1)
-        #print(pid, r, 'tx_to_send:', tx_to_send)
-        #if self.logger != None: self.logger.info('Commit tx at Node %d:' % self.id + str(tx_to_send))
+        # print(pid, r, 'tx_to_send:', tx_to_send)
+        # if self.logger != None: self.logger.info('Commit tx at Node %d:' % self.id + str(tx_to_send))
 
         def _setup(j):
             """Setup the sub protocols RBC, BA and common coin.
@@ -311,13 +334,13 @@ class HoneyBadgerBFT():
 
         _output = honeybadger_block(pid, self.N, self.f, self.ePK, self.eSK,
                           _input.get,
-                          acs_in=my_rbc_input.put_nowait, acs_out=acs.get,
+                          acs_put_in=my_rbc_input.put_nowait, acs_get_out=acs.get,
                           tpke_bcast=tpke_bcast, tpke_recv=tpke_recv.get)
-
         block = set()
         for batch in _output:
+            # decoded_batch = (batch.decode())
             decoded_batch = json.loads(batch.decode())
             for tx in decoded_batch:
                 block.add(tx)
-
+        
         return list(block)

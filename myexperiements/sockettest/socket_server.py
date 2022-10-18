@@ -134,7 +134,7 @@ class NetworkServer (Process):
             self.socks[j] = sock
         else:
             self.logger.info("fails to build connect from {} to {}".format(self.id, j))
-            return False
+            return False 
         return True
 
     def _send(self, j: int, o: bytes):

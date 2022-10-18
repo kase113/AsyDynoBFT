@@ -1,12 +1,13 @@
 import random
 import time
+import logging
 import gevent
 from gevent import monkey
 from gevent.queue import Queue
 from honeybadgerbft.core.honeybadger import HoneyBadgerBFT
-from crypto.threshsig import dealer
+from crypto.threshsig.boldyreva import dealer
 from honeybadgerbft.crypto.threshenc import tpke
-
+ 
 
 monkey.patch_all(thread=False)
 
@@ -17,7 +18,7 @@ def simple_router(N, maxdelay=0.01, seed=None):
     """
     rnd = random.Random(seed)
 
-    queues = [Queue() for _ in range(N)]
+    queues = [Queue() for _ in range(N)] 
     _threads = []
 
     def makeSend(i):
@@ -31,7 +32,7 @@ def simple_router(N, maxdelay=0.01, seed=None):
     def makeRecv(j):
         def _recv():
             (i,o) = queues[j].get()
-            print(j, (i,o))
+            # print(j, (i,o))
             #print 'RECV %8s [%2d -> %2d]' % (o[0], i, j)
             return (i,o)
         return _recv
@@ -41,7 +42,7 @@ def simple_router(N, maxdelay=0.01, seed=None):
 
 
 ### Test asynchronous common subset
-def _test_honeybadger(N=5, f=1, seed=None):
+def _test_honeybadger(N=4, f=1, seed=None):
     sid = 'sidA'
     # Generate threshold sig keys
     sPK, sSKs = dealer(N, f+1, seed=seed)
@@ -58,15 +59,17 @@ def _test_honeybadger(N=5, f=1, seed=None):
     threads = [None] * N
     
     # This is an experiment parameter to specify the maximum round number 
-    K = 5
-    B = 1
+    K = 3 
+    B = 256
 
-
+    logging.basicConfig(level = logging.INFO,format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logger = logging.getLogger(__name__)
+    
 
     for i in range(N):
         badgers[i] = HoneyBadgerBFT(sid, i, B, N, f,
                                     sPK, sSKs[i], ePK, eSKs[i],
-                                    sends[i], recvs[i], K)
+                                    sends[i], recvs[i], K, logger)
         #print(sPK, sSKs[i], ePK, eSKs[i])
 
 

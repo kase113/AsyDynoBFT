@@ -8,7 +8,7 @@ import logging
 import traceback
 from multiprocessing import Value as mpValue, Process
 
-
+ 
 
 # Network node class: deal with socket communications
 class NetworkServer (Process):
@@ -18,13 +18,14 @@ class NetworkServer (Process):
     def __init__(self, port: int, my_ip: str, id: int, addresses_list: list, server_to_bft: Callable, server_ready: mpValue, stop: mpValue):
 
         self.server_to_bft = server_to_bft
-        self.ready = server_ready
+        self.ready = server_ready 
         self.stop = stop
-        self.ip = my_ip
-        self.port = port
-        self.id = id
         self.addresses_list = addresses_list
         self.N = len(self.addresses_list)
+        self.ip = my_ip 
+        self.port = port  
+        # self.id = id % self.N
+        self.id = id
         self.is_in_sock_connected = [False] * self.N
         self.socks = [None for _ in self.addresses_list]
         super().__init__()
@@ -33,9 +34,10 @@ class NetworkServer (Process):
         pid = os.getpid()
         self.logger.info('node %d\'s socket server starts to listen ingoing connections on process id %d' % (self.id, pid))
         print("my IP is " + self.ip)
-
+ 
         def _handler(sock, address):
             jid = self._address_to_id(address)
+            print('jid', jid)
             buf = b''
             try:
                 while not self.stop.value:
@@ -49,7 +51,7 @@ class NetworkServer (Process):
                             # assert j in range(self.N)
                             self.server_to_bft((j, o))
                             # self.logger.info('recv' + str((j, o)))
-                            # print('recv' + str((j, o)))
+                            # print('server recv' + str((j, o)))
                         else:
                             self.logger.error('syntax error messages')
                             raise ValueError
@@ -66,6 +68,7 @@ class NetworkServer (Process):
         pid = os.getpid()
         self.logger = self._set_server_logger(self.id)
         self.logger.info('node id %d is running on pid %d' % (self.id, pid))
+        print(self.id, pid)
         with self.ready.get_lock():
             self.ready.value = True
         self._listen_and_recv_forever()

@@ -14,11 +14,11 @@ from dumbobft.core.dumbocommonsubset import dumbocommonsubset
 from dumbobft.core.provablereliablebroadcast import provablereliablebroadcast
 from dumbobft.core.validatedcommonsubset import validatedcommonsubset
 from dumbobft.core.validators import prbc_validate
-from honeybadgerbft.core.honeybadger_block import honeybadger_block
+from dumbobft.core.honeybadger_block import honeybadger_block
 from honeybadgerbft.exceptions import UnknownTagError
 
 
-def set_consensus_log(id: int):
+def set_consensus_log(id: int): 
     logger = logging.getLogger("consensus-node-"+str(id))
     logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
@@ -36,7 +36,7 @@ class BroadcastTag(Enum):
     ACS_PRBC = 'ACS_PRBC'
     ACS_VACS = 'ACS_VACS'
     TPKE = 'TPKE'
-
+ 
 
 BroadcastReceiverQueues = namedtuple(
     'BroadcastReceiverQueues', ('ACS_PRBC', 'ACS_VACS', 'TPKE'))
@@ -44,7 +44,7 @@ BroadcastReceiverQueues = namedtuple(
 
 def broadcast_receiver_loop(recv_func, recv_queues):
     while True:
-        #gevent.sleep(0)
+        #gevent.sleep(0) 
         sender, (tag, j, msg) = recv_func()
         if tag not in BroadcastTag.__members__:
             # TODO Post python 3 port: Add exception chaining.
@@ -62,7 +62,7 @@ def broadcast_receiver_loop(recv_func, recv_queues):
             traceback.print_exc(e)
 
 
-class Dumbo():
+class Dumbo(): 
     """Dumbo object used to run the protocol.
 
     :param str sid: The base name of the common coin that will be used to
@@ -132,7 +132,7 @@ class Dumbo():
 
     def run_bft(self):
         """Run the Dumbo protocol."""
-
+ 
         if self.mute:
             muted_nodes = [each * 3 + 1 for each in range(int((self.N - 1) / 3))]
             if self.id in muted_nodes:
@@ -143,6 +143,7 @@ class Dumbo():
 
         def _recv_loop():
             """Receive messages."""
+            self.logger.info('this is running recv_loop')
             #print("start recv loop...")
             while True:
                 #gevent.sleep(0)
@@ -365,7 +366,7 @@ class Dumbo():
         dumboacs_thread.start()
 
         _output = honeybadger_block(pid, self.N, self.f, self.ePK, self.eSK,
-                          propose=json.dumps(tx_to_send),
+                          propose_in=json.dumps(tx_to_send),
                           acs_put_in=my_prbc_input.put_nowait, acs_get_out=dumboacs_thread.get,
                           tpke_bcast=tpke_bcast, tpke_recv=tpke_recv.get)
 

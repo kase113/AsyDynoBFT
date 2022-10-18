@@ -1,5 +1,6 @@
+from ast import parse
 from gevent import monkey; monkey.patch_all(thread=False)
-
+ 
 import time
 import random
 import traceback
@@ -8,15 +9,17 @@ from gevent import Greenlet
 from myexperiements.sockettest.dumbo_node import DumboBFTNode
 from myexperiements.sockettest.bdt_node import BdtBFTNode
 from myexperiements.sockettest.rbcbdt_node import RbcBdtBFTNode
+from myexperiements.sockettest.hbbft_node import HoneyBadgerBFTNode
 from myexperiements.sockettest.rotatinghotstuff_node import RotatingHotstuffBFTNode
+from myexperiements.sockettest.hbbft_node_shard import HoneyBadgerBFTNode_shard
 from network.socket_server import NetworkServer
 from network.socket_client import NetworkClient
 from multiprocessing import Value as mpValue, Queue as mpQueue
 from ctypes import c_bool
-
-
-def instantiate_bft_node(sid, i, B, N, f, K, S, T, bft_from_server: Callable, bft_to_client: Callable, ready: mpValue,
-                         stop: mpValue, protocol="mule", mute=False, F=100, debug=False, omitfast=False, bft_running: mpValue=mpValue(c_bool, False)):
+ 
+ 
+def instantiate_bft_node(sid, i, B, N, f, K, R, S, T, bft_from_server: Callable, bft_to_client: Callable, ready: mpValue,
+                         stop: mpValue, protocol="hbbft", mute=False, F=100, debug=False, omitfast=False, bft_running: mpValue=mpValue(c_bool, False)):
     bft = None
     if protocol == 'dumbo':
         bft = DumboBFTNode(sid, i, B, N, f, bft_from_server, bft_to_client, ready, stop, K, mute=mute, debug=debug, bft_running=bft_running)
@@ -26,10 +29,15 @@ def instantiate_bft_node(sid, i, B, N, f, K, S, T, bft_from_server: Callable, bf
         bft = RotatingHotstuffBFTNode(sid, i, S, T, B, F, N, f, bft_from_server, bft_to_client, ready, stop, K, mute=mute, omitfast=omitfast, bft_running=bft_running)
     elif protocol == "rbc-bdt":
         bft = RbcBdtBFTNode(sid, i, S, T, B, F, N, f, bft_from_server, bft_to_client, ready, stop, K, mute=mute, omitfast=omitfast, network=bft_running)
+    elif protocol == "hbbft":
+        # bft = HoneyBadgerBFTNode(sid, i, B, N, f, bft_from_server, bft_to_client, K)
+        bft = HoneyBadgerBFTNode(sid, i, B, N, f, bft_from_server, bft_to_client, ready, stop, K, mute=mute, debug=debug, bft_running=bft_running)
+    elif protocol == "hbbft_shard":
+        bft = HoneyBadgerBFTNode_shard(sid, i, B, N, f, bft_from_server, bft_to_client, ready, stop, K, R, MR, mute=mute, debug=debug, bft_running=bft_running)
     else:
         print("Only support dumbo or mule or stable-hs or rotating-hs")
     return bft
-
+ 
 
 if __name__ == '__main__':
 
@@ -48,12 +56,18 @@ if __name__ == '__main__':
                         help='size of batch', type=int)
     parser.add_argument('--K', metavar='K', required=True,
                         help='rounds to execute', type=int)
+    parser.add_argument('--R', metavar='R', required=False,
+                        help='amount of shard', type=int, default=1)
+    parser.add_argument('--MR', metavar='MR', required=False,
+                        help='the max shard', type=int, default=1)
+    parser.add_argument('--per', metavar='per', type=int,required=False,
+                        help='the per of across trand,from 0 to 1',default=1)
     parser.add_argument('--S', metavar='S', required=False,
                         help='slots to execute', type=int, default=50)
     parser.add_argument('--T', metavar='T', required=False,
                         help='fast path timeout', type=float, default=1)
     parser.add_argument('--P', metavar='P', required=False,
-                        help='protocol to execute', type=str, default="mule")
+                        help='protocol to execute', type=str, default="hbbft")
     parser.add_argument('--M', metavar='M', required=False,
                         help='whether to mute a third of nodes', type=bool, default=False)
     parser.add_argument('--F', metavar='F', required=False,
@@ -67,10 +81,12 @@ if __name__ == '__main__':
     # Some parameters
     sid = args.sid
     i = args.id
-    N = args.N
+    N = args.N 
     f = args.f
     B = args.B
     K = args.K
+    R = args.R
+    MR = args.MR
     S = args.S
     T = args.T
     P = args.P
@@ -78,11 +94,14 @@ if __name__ == '__main__':
     F = args.F
     D = args.D
     O = args.O
+    per = args.per
+
 
     # Random generator
     rnd = random.Random(sid)
 
     # Nodes list
+    host_file = 'hosts-' + str(R) + '.config'
     addresses = [None] * N
     try:
         with open('hosts.config', 'r') as hosts:
@@ -93,7 +112,7 @@ if __name__ == '__main__':
                 pub_ip = params[2]
                 port = int(params[3])
                 # print(pid, ip, port)
-                if pid not in range(N):
+                if (pid) not in range(N):
                     continue
                 if pid == i:
                     my_address = (priv_ip, port)
@@ -114,7 +133,7 @@ if __name__ == '__main__':
         bft_from_server = lambda: server_bft_mpq.get(timeout=0.00001)
         server_to_bft = server_bft_mpq.put_nowait
 
-        client_ready = mpValue(c_bool, False)
+        client_ready = mpValue(c_bool, False)  
         server_ready = mpValue(c_bool, False)
         net_ready = mpValue(c_bool, False)
         stop = mpValue(c_bool, False)
@@ -122,9 +141,9 @@ if __name__ == '__main__':
 
         net_server = NetworkServer(my_address[1], my_address[0], i, addresses, server_to_bft, server_ready, stop)
         net_client = NetworkClient(my_address[1], my_address[0], i, addresses, client_from_bft, client_ready, stop, bft_running, dynamic=False)
-        bft = instantiate_bft_node(sid, i, B, N, f, K, S, T, bft_from_server, bft_to_client, net_ready, stop, P, M, F, D, O, bft_running)
-        #print(O)
-        net_server.start()
+        bft = instantiate_bft_node(sid, i, B, N, f, K, R, S, T, bft_from_server, bft_to_client, net_ready, stop, P, M, F, D, O, bft_running)
+        #print(O) 
+        net_server.start() 
         net_client.start()
 
         while not client_ready.value or not server_ready.value:

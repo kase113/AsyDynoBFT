@@ -1,12 +1,13 @@
 import os
 
 host = "127.0.0.1"
-port = 10007
+port = 10150
 
 with open('hosts.config', 'a') as hosts:
     for i in range(161):
         hosts.write(str(i) + " " + host + " " + str(port) + os.linesep)
-        port += 200
+        port += 100
+        
 
 # print("hosts.config is not correctly read... ")
 # host = "127.0.0.1"
