@@ -135,7 +135,7 @@ def merkleVerify(N, val, roothash, branch, index):
 
 def reliablebroadcast(sid, pid, N, f, leader, input, receive, send, start, end, max):
     """Reliable broadcast
-
+  
     :param int pid: ``0 <= pid < N``
     :param int N:  at least 3
     :param int f: fault tolerance, ``N >= 3f + 1``

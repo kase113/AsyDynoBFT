@@ -197,10 +197,11 @@ class Dumbo():
             if self.logger != None:
                 tx_cnt = str(new_tx).count("Dummy TX")
                 self.txcnt += tx_cnt
-                self.logger.info('Node %d Delivers ACS Block in Round %d with having %d TXs' % (self.id, r, tx_cnt))
+                # self.logger.info('Node %d Delivers ACS Block in Round %d with having %d TXs' % (self.id, r, tx_cnt))
                 end = time.time()
                 self.logger.info('ACS Block Delay at Node %d: ' % self.id + str(end - start))
-                self.logger.info('Current Block\'s TPS at Node %d: ' % self.id + str(tx_cnt/(end - start)))
+                self.logger.info('Current Block\'s TPS at Node %d: %s in %s round' % (self.id ,str(tx_cnt/(end - start)), str(self.round)))
+                self.logger.info('ACS Block delay at Node %d: %s in %s round' % (self.id ,str(end - start), str(self.round)))
 
             #print('* Node %d outputs an ACS Block at the %d-th Round:' % (self.id, r))
             #print("    - Latency of this block: %.12f seconds" % (end - start))
@@ -221,7 +222,7 @@ class Dumbo():
 
         if self.logger != None:
             self.e_time = time.time()
-            self.logger.info("node %d breaks in %f seconds with total delivered Txs %d" % (self.id, self.e_time-self.s_time, self.txcnt))
+            self.logger.info("node %d breaks in %f seconds with total delivered Txs %d in %d round" % (self.id, self.e_time-self.s_time, self.txcnt, self.K))
         else:
             print("node %d breaks" % self.id)
 

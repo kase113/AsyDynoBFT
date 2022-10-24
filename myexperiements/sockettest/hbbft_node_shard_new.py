@@ -80,10 +80,10 @@ def set_logger_of_node(id: int):
  
 class HoneyBadgerBFTNode_shard_new (HoneyBadgerBFT):
  
-    def __init__(self, sid, id, B, N, f, bft_from_server, bft_to_client,ready: mpValue, stop: mpValue, K=3, R=1, MR=1, BP=False, per=1, mode='debug', mute=False,debug=False, bft_running: mpValue=mpValue(c_bool, False), tx_buffer=None):
+    def __init__(self, sid, id, B, N, f, per, bft_from_server, bft_to_client,ready: mpValue, stop: mpValue, K=3, R=1, MR=1, BP=False, mode='debug', mute=False,debug=False, bft_running: mpValue=mpValue(c_bool, False), tx_buffer=None):
         self.R = R # 当前 shard id
         self.MR = MR # 最大 shard id
-        self.shard = 4
+        self.shard = int(N / MR)
         # if self.R == 0:
         #     self.shard = int(N/(R+1))# shard 是每组的节点数
         # else:
@@ -104,11 +104,9 @@ class HoneyBadgerBFTNode_shard_new (HoneyBadgerBFT):
         self.K = K
         self.B = B
         self.bp = BP
+
         
-        # self.instance = []
-        # self.per = per
-        self.per = per
-        HoneyBadgerBFT.__init__(self, sid, id, B, N, f, self.sPK, self.sSK, self.ePK, self.eSK, send=self.send, recv=self.recv, shard=self.shard, K=K, R=R, MR=MR, bp=BP, logger=set_consensus_log(id), mute=mute)
+        HoneyBadgerBFT.__init__(self, sid, id, B, N, f, self.sPK, self.sSK, self.ePK, self.eSK, per, send=self.send, recv=self.recv, shard=self.shard, K=K, R=R, MR=MR, bp=BP, logger=set_consensus_log(id), mute=mute)
         
         self._prepare_bootstrap()
 

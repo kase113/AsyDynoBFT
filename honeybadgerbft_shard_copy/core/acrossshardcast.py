@@ -1,7 +1,10 @@
 from asyncio.log import logger
 from asyncore import read
 from collections import defaultdict, namedtuple
+from concurrent.futures import thread
 from enum import Enum
+import logging
+from re import I
 import time
 
 from gevent.queue import Queue
@@ -144,27 +147,55 @@ class CRBC():
         except KeyboardInterrupt:
             gevent.killall(task_list)
 
-def crossshardbroadcast (sid, pid, N, f, target, input, receive, send, R, MR, logger, round):
+def crossshardbroadcast (sid, pid, N, f, target, input, receive, send, R, MR, logger, round, batch, threads):
 
     # start_time = time.time()
     assert MR >= R
     assert N >= 3*f +1
     assert f >=0
 
+    ReadyThreshold  = f + 1  
     OutputThreshold = f + 1
+    readySent = False
+    ready = defaultdict(set)
 
-    transaction = input 
-    for i in range(target * N, (target+1) * N):
-        send(i, ('ARBC', transaction))
-        # print('have send arbc', i)
+    for i in range(target*N, (target+1)*N):
+        if i<= (R+1)*N and i >= R * N:
+            continue
+        else:
+            for j in range(int(batch/N)):
+                ac_input = input + str(j)
+                send(i, ('ARBC', ac_input))
+    
+    # if target == 0:
+    #     # for i in range(target * N, (target+1) * N):
+    #     for i in range(0,4):
+    #         print('arbc is running', f)
+    #         for j in range(50):
+    #             new_input = input + str(j)
+    #         # if i<= (R+1)*N and i >= R * N:
+    #         #     continue
+    #         # logger.info('hava send ac_tx %s the pid %s and the target id with %s' % (str(input), str(pid), str(i)))
+    #             send(i, ('ARBC', new_input))
+    # elif target == 1:
+    #     for i in range(4,8):
+    #         print('arbc is running', f)
+    #         for j in range(50):
+    #             new_input = input + str(j)
+    #             send(i, ('ARBC', new_input))
+        
+    def broadcast(o):
+        for i in range(R*N, (R+1)*N):
+            send(i, o)
 
     def decide(transaction, readySender, logger):
         end_time = time.time()
-        logger.info('decide: %s with the ready_list %s in %f in round of %d' % (transaction, str(readySender[hash(transaction)]), end_time-s_time[hash(transaction)], round))
+        logger.info('decide: %s with the ready_list %s in %f in round of %d' % (transaction, str(readySender[ac_tx]), end_time-s_time[ac_tx], round))
 
 
     readySenders = defaultdict(set)
     s_time = {}
+    readyCounter = defaultdict(lambda: 0)
 
 
     while True:
@@ -172,17 +203,59 @@ def crossshardbroadcast (sid, pid, N, f, target, input, receive, send, R, MR, lo
         if msg[0] == 'ARBC':
             ac_tx = msg
             # Validation Redundant``
-            tx_hash = hash(ac_tx)
-            if sender in readySenders[tx_hash]:
-                # print("Redundant READY")
+            # tx_hash = hash(ac_tx)
+            if sender in readySenders[ac_tx]:
+                continue
+            if len(readySenders[ac_tx]) >= ReadyThreshold:
                 continue
             # Update start time
-            if (tx_hash in s_time) == False:
-                s_time[tx_hash] = time.time()
-            #Update
-            readySenders[tx_hash].add(sender)
+            if (ac_tx in s_time) == False:
+                s_time[ac_tx] = time.time()
+
+            readyCounter[ac_tx] += 1
+            readySenders[ac_tx].add(sender)
+
+            # logger.info('this is the greenlet current %s and len of readySenders %s' % (str(gevent.getcurrent()), str(len(readySenders))))
+            # logger.info(' this is the elements of readySenders %s' % (str(readySenders)))
             
-            if len(readySenders[tx_hash]) >= OutputThreshold:
-                return decide(ac_tx, readySenders,logger)
+            # logger.info('have add on set %s and sender %s and member of readySenders %s and round value with %s' % (str(ac_tx), str(sender), str(readySenders[ac_tx]), str(round)))
+            # logger.info('have add on Count %s' % (str(readyCounter[ac_tx])))
+
+            if len(readySenders[ac_tx]) >= OutputThreshold :
+                decide(ac_tx, readySenders,logger)
+            
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
+            # if len(readySenders[tx_hash]) >= ReadyThreshold:
+            #     return decide(ac_tx, readySenders,logger)
+                # broadcast(('CRBC', ac_tx))
+                
+        # elif msg[0] == 'CRBC':
+        #     (_, ac_tx) = msg
+
+        #     if sender in ready[ac_tx]:
+        #         continue
+        #     if len(ready[ac_tx]) >= ReadyThreshold and not readySent:
+        #         broadcast(('CRBC', ac_tx))
+            
+        #     if len(ready[ac_tx]) >= OutputThreshold:
+        #         return decide(ac_tx, ready,logger)
+
 
             

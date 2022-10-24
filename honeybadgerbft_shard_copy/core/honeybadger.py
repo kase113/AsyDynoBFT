@@ -12,7 +12,7 @@ from collections import defaultdict, namedtuple, deque
 from enum import Enum
 from gevent import Greenlet
 from gevent.queue import Queue
-import random
+import random 
 from honeybadgerbft_shard_copy.core.commoncoin import shared_coin
 from honeybadgerbft_shard_copy.core.binaryagreement import binaryagreement
 from honeybadgerbft_shard_copy.core.reliablebroadcast import reliablebroadcast
@@ -49,29 +49,14 @@ def broadcast_receiver(recv_func, recv_queues, shard):
         raise UnknownTagError('Unknown tag: {}! Must be one of {}.'.format(
             tag, BroadcastTag.__members__.keys()))
     recv_queue = recv_queues._asdict()[tag] 
+    # logger.info('sender %s tag %s and j %s' % (str(sender), str(tag), str(j)))
 
-    # print('this is the sender and msg', sender, msg[0])
     if tag != BroadcastTag.TPKE.value:
         recv_queue = recv_queue[j%shard]
     
-    # if tag == BroadcastTag.CROSS_RBC.value:
-    #     recv_queue = recv_queue[j]
+
 
     recv_queue.put_nowait((sender, msg))
-
-# def across_broadcast_receiver(recv_func, recv_queues):
-#     sender, (tag, j, msg) = recv_func()
-#     if tag not in Across_BroadcastTag.__members__:
-#         # TODO Post python 3 port: Add exception chaining.
-#         # See https://www.python.org/dev/peps/pep-3134/
-#         raise UnknownTagError('Unknown tag: {}! Must be one of {}.'.format(
-#             tag, Across_BroadcastTag.__members__.keys()))
-#     recv_queue = recv_queues._asdict()[tag] 
-
-#     if tag != BroadcastTag.CROSS_RBC.value:
-#         recv_queue = recv_queue[j]
-
-#     recv_queue.put_nowait((sender, msg))
 
 
 
@@ -80,12 +65,6 @@ def broadcast_receiver_loop(recv_func, recv_queues, shard):
         gevent.sleep(0)
         time.sleep(0)
         broadcast_receiver(recv_func, recv_queues, shard)
-
-# def across_broadcast_receiver_loop(recv_func, recv_queues):
-#     while True
-#         gevent.sleep(0)
-#         time.sleep(0)
-#         across_broadcast_receiver(recv_func, recv_queues)
  
 
 class HoneyBadgerBFT():
@@ -110,7 +89,7 @@ class HoneyBadgerBFT():
     :param K: a test parameter to specify break out after K rounds
     """ 
 
-    def __init__(self, sid, pid, B, N, f, sPK, sSK, ePK, eSK, send, recv, shard, K, R, MR,bp, logger, mute=False):
+    def __init__(self, sid, pid, B, N, f, sPK, sSK, ePK, eSK, per, send, recv, shard, K, R, MR, bp, logger, mute=False):
         self.sid = sid
         self.id = pid 
         self.B = B
@@ -132,10 +111,11 @@ class HoneyBadgerBFT():
         self.shard = shard
         self.startpoint = int(R * shard)
         self.end = int((R+1) * shard)
-        self.per = 0.1
         self.bp = bp
-        # self.startpoint = 4
-        # self.end = 8
+        self.per = per
+        self.ac_batch = per * (self.shard * self.B)
+        self.thread = 5
+        # self.bp = True
 
 
         self.s_time = 0
@@ -173,21 +153,6 @@ class HoneyBadgerBFT():
                 self._send = send_blackhole
                 self._recv = recv_blackhole
 
-        # def _recv():
-        #     """Receive messages."""
-        #     while True:
-
-        #         gevent.sleep(0)
-        #         time.sleep(0)
-
-        #         (sender, (r, msg)) = self._recv()
-
-        #         # Maintain an *unbounded* recv queue for each epoch
-        #         if r not in self._per_round_recv:
-        #             self._per_round_recv[r] = Queue()
-
-        #         # Buffer this message
-        #         self._per_round_recv[r].put_nowait((sender, msg))
         def _recv_loop():
             """Receive messages."""
             #print("start recv loop...")
@@ -196,6 +161,7 @@ class HoneyBadgerBFT():
                 try:
                     (sender, (r, msg) ) = self._recv()
                     #self.logger.info('recv1' + str((sender, o)))
+                    # self.logger.info('recv1 %s sender and %s msg' % (str(sender), str(msg)))
                     #print('recv1' + str((sender, o)))
                     # Maintain an *unbounded* recv queue for each epoch
                     if r not in self._per_round_recv:
@@ -247,7 +213,7 @@ class HoneyBadgerBFT():
             if self.logger != None:
                 #self.logger.info('Node %d Delivers Block %d: ' % (self.id, self.round) + str(new_tx))
                 tx_cnt = str(new_tx).count("Dummy TX")
-                self.txcnt += tx_cnt
+                self.txcnt = tx_cnt
                 self.logger.info(
                 'Node %d Delivers ACS Block in Round %d with having %d TXs' % (self.id, r, tx_cnt))
 
@@ -261,9 +227,7 @@ class HoneyBadgerBFT():
                 if _tx not in new_tx:
                     self.transaction_buffer.appendleft(_tx)
 
-            #print('buffer at %d:' % self.id, self.transaction_buffer)
-            #if self.logger != None:
-            #    self.logger.info('Backlog Buffer at Node %d:' % self.id + str(self.transaction_buffer))
+            
 
             self.round += 1     # Increment the round
             if self.round >= self.K:
@@ -271,7 +235,6 @@ class HoneyBadgerBFT():
 
         if self.logger != None:
             self.e_time = time.time()
-            logger.info ("this is the BP flag ", self.bp)
             # self.logger.info("node %d breaks in %f seconds with total delivered Txs %d" % (self.id, self.e_time-self.s_time, self.txcnt))
             self.logger.info("node %d of shard %d in %f seconds with total delivered Txs %d and throughput with %f" % (self.id, self.R, self.e_time-self.s_time, self.txcnt, (self.txcnt / (self.e_time-self.s_time))))
         else:
@@ -291,6 +254,7 @@ class HoneyBadgerBFT():
         pid = self.id
         N = self.N
         f = self.f
+        bp = self.bp
 
         def broadcast(o):
             """Multicast the given input ``o``.
@@ -301,25 +265,16 @@ class HoneyBadgerBFT():
             for j in range(self.startpoint, self.end):
                 send(j, o)
 
-        # Launch ACS, ABA, instances
-        # coin_recvs = [None] * N
-        # aba_recvs  = [None] * N  # noqa: E221
-        # rbc_recvs  = [None] * N  # noqa: E221
-
         coin_recvs = [None] * self.shard
         aba_recvs  = [None] * self.shard  # noqa: E221
         rbc_recvs  = [None] * self.shard  # noqa: E221
 
-        # aba_inputs  = [Queue(1) for _ in range(N)]  # noqa: E221
-        # aba_outputs = [Queue(1) for _ in range(N)]
-        # rbc_outputs = [Queue(1) for _ in range(N)]
-
         aba_inputs  = [Queue(1) for _ in range(self.shard)]  # noqa: E221
         aba_outputs = [Queue(1) for _ in range(self.shard)]
         rbc_outputs = [Queue(1) for _ in range(self.shard)]
+        arbc_outputs = [Queue(1) for _ in range(self.shard)]
 
         my_rbc_input = Queue(1)
-        # print(pid, r, 'tx_to_send:', tx_to_send)
         # if self.logger != None: self.logger.info('Commit tx at Node %d:' % self.id + str(tx_to_send))
 
         def _setup(j):
@@ -366,7 +321,6 @@ class HoneyBadgerBFT():
             rbc = gevent.spawn(reliablebroadcast, sid+'RBC'+str(j), pid, self.shard, f, j,
                                rbc_input, rbc_recvs[shard_j].get, rbc_send, self.startpoint, self.end, N)
             rbc_outputs[shard_j] = rbc.get  # block for output from rbc
-            # print('this is the rbc_output', rbc_outputs[shard_j], pid)
 
         # N instances of ABA, RBC
         # for j in range(N):
@@ -386,12 +340,8 @@ class HoneyBadgerBFT():
                            [_.get for _ in aba_outputs], self.startpoint, self.end)
 
 
-        # crbc_recvs = [None] * N
-        # for i in range(N):
-        #     crbc_recvs[i] = Queue()
         crbc_recvs = [None] * self.shard
         for i in range(self.startpoint, self.end):
-        # for i in range(self.N):
             crbc_recvs[i % self.shard] = Queue()
 
         recv_queues = BroadcastReceiverQueues(
@@ -417,50 +367,46 @@ class HoneyBadgerBFT():
             for tx in decoded_batch:
                 block.add(tx)
 
-        ac_tx = defaultdict(set)
         tx = list(block)
+        logger.info((str(tx)))
         tx_cnt = str(tx).count("Dummy TX")
         if self.logger != None:
             e_time = time.time()
             self.logger.info("node %d of shard %d in %f seconds with total delivered Txs %d in %d round and throughout with %f" % (self.id, self.R, e_time-self.s_time, tx_cnt, self.round, tx_cnt / (e_time-self.s_time)))
         
+        
         # AcrossBroadcast start
         def crbc_send(k, o): 
                 send(k, ('CROSS_RBC', j, o))
-        arbc_outputs = [Queue(1) for _ in range(N)]
-        # if flag == False:
-        #     tx_length = len(tx)
-        #     flag = True
+        
 
-        ac =  int(self.per * len(tx))
-        if self.bp == False: # tx one by one send
-            self.logger.info("node %d start one by one send acrossBroadcast" % self.id)
-            for i in range(ac):
-                target_shard = int(i%self.MR)
-                if target_shard == self.R:
-                    continue
-                else:
-                # for j in range(target*self.shard, (target+1)*self.shard):
-                    arbc_input = tx[i]
-                    arbc = gevent.spawn(crossshardbroadcast, sid, pid, self.shard, f, target_shard, arbc_input, crbc_recvs[j%self.shard].get, crbc_send, self.R, self.MR, self.logger, self.round)
-                    arbc_outputs[j%self.shard] = arbc.get
-        elif  self.bp == True:  #batch processing
+        # ac_rbc in send by send
+        # if self.bp == False: # tx one by one send
+        #     ac = len(tx)
+        #     self.logger.info("node %d start one by one send acrossBroadcast" % self.id)
+        #     for i in range(ac):
+        #         target_shard = int(i%self.MR)
+        #         if target_shard == self.R:
+        #             continue
+        #         else:
+        #             arbc_input = tx[i]
+        #             arbc = gevent.spawn(crossshardbroadcast, sid, pid, self.shard, f, target_shard, arbc_input, crbc_recvs[j%self.shard].get, crbc_send, self.R, self.MR, self.logger, self.round)
+        #             arbc_outputs[j%self.shard] = arbc.get
+
+        if bp == True:  #batch processing
             self.logger.info("node %d start batch processing send acrossBroadcast" % self.id)
-            for i in range(ac):
-                target_shard = int(i % self.MR)
-                ac_tx[target_shard].add(tx[i])
-            for j in range(self.MR):    #j: id of shard
-                for batch in ac_tx[j]:  #batch: tx of sending to j
-                    arbc = gevent.spawn(crossshardbroadcast, sid, pid, self.shard, f, target_shard, batch, crbc_recvs[j%self.shard].get, crbc_send, self.R, self.MR, self.logger, self.round)
-
-        arbc_recv = gevent.spawn(broadcast_receiver_loop, recv, recv_queues, self.shard)
-        # try:
-        arbc_recv.join(timeout=10)
-        # except KeyboardInterrupt:
-        #     gevent.killall(arbc_recv)
-        #     raise
-        print('arbc has done')
-
+            target_shard = int((self.R+1)%self.MR) # ac_tx send to next shard
+            # if self.R == 0:
+            #     target_shard = 1
+            # else:
+            #     target_shard = 0
+            for i in range(int(self.shard)):
+                arbc_in = str(i)+str(sid)
+                arbc = gevent.spawn(crossshardbroadcast, sid, pid, self.shard, f, target_shard, arbc_in, crbc_recvs[i%self.shard].get, crbc_send, self.R, self.MR, self.logger, self.round, self.ac_batch, self.thread)
+                arbc_outputs[i%self.shard] = arbc.get
+            arbc_recv = gevent.spawn(broadcast_receiver_loop, recv, recv_queues, self.shard)
+            arbc_recv.join(timeout=0)
+        print('arbc has done in round of', r)
         return list(block)
 
     def get_tx(self):
