@@ -22,6 +22,7 @@ from dumbobft.core.validatedcommonsubset import validatedcommonsubset
 from dumbobft.core.provablereliablebroadcast import provablereliablebroadcast
 from dumbobft.core.dumbocommonsubset import dumbocommonsubset
 from dumbobft.core.honeybadger_block import honeybadger_block
+# from honeybadgerbft.core.honeybadger import honeybadger_block
 from crypto.threshsig.boldyreva import serialize, deserialize1
 from crypto.threshsig.boldyreva import TBLSPrivateKey, TBLSPublicKey
 from crypto.ecdsa.ecdsa import PrivateKey

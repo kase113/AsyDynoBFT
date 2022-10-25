@@ -45,7 +45,7 @@ def deserialize_UVW(U, V, W):
     return U, V, W
 
 
-def honeybadger_block(pid, N, f, PK, SK, propose_in, acs_put_in, acs_get_out, tpke_bcast, tpke_recv, logger=None):
+def honeybadger_block(pid, N, f, PK, SK, propose, acs_put_in, acs_get_out, tpke_bcast, tpke_recv, logger=None):
     """The HoneyBadgerBFT algorithm for a single block
 
     :param pid: my identifier
@@ -68,7 +68,7 @@ def honeybadger_block(pid, N, f, PK, SK, propose_in, acs_put_in, acs_get_out, tp
     # TODO: check that propose_in is the correct length, not too large
     # propose = propose_in()
     key = os.urandom(32)    # random 256-bit key
-    ciphertext = tpke.encrypt(key, propose_in)
+    ciphertext = tpke.encrypt(key, propose)
     tkey = PK.encrypt(key)
 
 
