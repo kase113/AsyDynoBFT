@@ -171,7 +171,7 @@ class NetworkClient (Process):
                 j, o = self.client_from_bft()
                 #o = self.send_queue[j].get_nowait()
                 # print('send' + str((j, o)))
-                # self.logger.info('send' + str((j, o)))
+                self.logger.info('send' + str((j, o)))
                 try:
                     #self._send(j, pickle.dumps(o))
                     if j == -1: # -1 means broadcast
