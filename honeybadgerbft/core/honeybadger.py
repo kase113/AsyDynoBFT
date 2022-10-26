@@ -223,6 +223,7 @@ class HoneyBadgerBFT():
         if self.logger != None:
             self.e_time = time.time()
             self.logger.info("node %d breaks in %f seconds with total delivered Txs %d" % (self.id, self.e_time-self.s_time, self.txcnt))
+            self.logger.info("node %d of shard %d in %f seconds with total delivered Txs %d and throughput with %f" % (self.id, self.R, self.e_time-self.s_time, self.txcnt, (self.txcnt / (self.e_time-self.s_time))))
         else:
             print("node %d breaks" % self.id)
 
