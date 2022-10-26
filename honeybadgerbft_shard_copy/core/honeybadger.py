@@ -220,7 +220,7 @@ class HoneyBadgerBFT():
             end = time.time()
 
             if self.logger != None:
-                self.logger.info('ACS Block Delay at Round %d at Node %d: ' % (self.id, r) + str(end - start))
+                self.logger.info('ACS Block Delay at Node %d at Round %d: ' % (self.id, r) + str(end - start))
 
             # Remove output transactions from the backlog buffer
             for _tx in tx_to_send:
