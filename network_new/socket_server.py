@@ -40,10 +40,12 @@ class NetworkServer (Process):
  
         def _handler(sock, address):
             jid = self._address_to_id(address)
+            self.logger.info('hava recv jid %s' % (str(jid)))
             buf = b''
             try:
                 while not self.stop.value:
                     buf += sock.recv(2_000_000)
+                    self.logger.info('hava running recv')
                     tmp = buf.split(self.SEP, 1)
                     while len(tmp) == 2:
                         buf = tmp[1]
