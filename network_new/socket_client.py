@@ -156,6 +156,7 @@ class NetworkClient (Process):
     def _send(self, j:int):
         while not self.stop.value:
             o = self.sock_queues[j].get()
+            self.logger.info('is running send')
             try:
                 self.socks[j].sendall(pickle.dumps(o) + self.SEP)
             except:
