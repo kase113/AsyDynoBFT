@@ -40,7 +40,7 @@ class NetworkServer (Process):
  
         def _handler(sock, address):
             #jid = self._address_to_id(address)
-            jid = self.id
+            jid = self._address_to_id_new(address)
             self.logger.info('hava recv jid %s' % (str(jid)))
             buf = b''
             try:
@@ -84,6 +84,8 @@ class NetworkServer (Process):
                 return i
         # return int((address[1] - 10000) / 200)
         return int((address[1] - 10000) / 500)
+    def _address_to_id_new(self, address: tuple):
+        return int((address[1] - 20000) / 500)
 
     def _set_server_logger(self, id: int):
         logger = logging.getLogger("node-" + str(id))
