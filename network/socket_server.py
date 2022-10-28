@@ -36,7 +36,8 @@ class NetworkServer (Process):
         print("my IP is " + self.ip)
  
         def _handler(sock, address):
-            jid = self._address_to_id(address)
+            #jid = self._address_to_id(address)
+            jid = self.id
             print('jid', jid)
             buf = b''
             try:
