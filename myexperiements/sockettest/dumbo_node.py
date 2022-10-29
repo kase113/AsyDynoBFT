@@ -13,30 +13,30 @@ from ctypes import c_bool
 
 def load_key(id, N):
 
-    with open(os.getcwd() + '/keys-' + str(N) + '/' + 'sPK.key', 'rb') as fp:
+    with open(os.getcwd() + '/keys/' + 'sPK.key', 'rb') as fp:
         sPK = pickle.load(fp)
 
-    with open(os.getcwd() + '/keys-' + str(N) + '/' + 'sPK1.key', 'rb') as fp:
+    with open(os.getcwd() + '/keys/' + 'sPK1.key', 'rb') as fp:
         sPK1 = pickle.load(fp)
 
     sPK2s = []
     for i in range(N):
-        with open(os.getcwd() + '/keys-' + str(N) + '/' + 'sPK2-' + str(i) + '.key', 'rb') as fp:
+        with open(os.getcwd() + '/keys/' + 'sPK2-' + str(i) + '.key', 'rb') as fp:
             sPK2s.append(PublicKey(pickle.load(fp)))
 
-    with open(os.getcwd() + '/keys-' + str(N) + '/' + 'ePK.key', 'rb') as fp:
+    with open(os.getcwd() + '/keys/' + 'ePK.key', 'rb') as fp:
         ePK = pickle.load(fp)
 
-    with open(os.getcwd() + '/keys-' + str(N) + '/' + 'sSK-' + str(id) + '.key', 'rb') as fp:
+    with open(os.getcwd() + '/keys/' + 'sSK-' + str(id) + '.key', 'rb') as fp:
         sSK = pickle.load(fp)
 
-    with open(os.getcwd() + '/keys-' + str(N) + '/' + 'sSK1-' + str(id) + '.key', 'rb') as fp:
+    with open(os.getcwd() + '/keys/' + 'sSK1-' + str(id) + '.key', 'rb') as fp:
         sSK1 = pickle.load(fp)
 
-    with open(os.getcwd() + '/keys-' + str(N) + '/' + 'sSK2-' + str(id) + '.key', 'rb') as fp:
+    with open(os.getcwd() + '/keys/' + 'sSK2-' + str(id) + '.key', 'rb') as fp:
         sSK2 = PrivateKey(pickle.load(fp))
 
-    with open(os.getcwd() + '/keys-' + str(N) + '/' + 'eSK-' + str(id) + '.key', 'rb') as fp:
+    with open(os.getcwd() + '/keys/' + 'eSK-' + str(id) + '.key', 'rb') as fp:
         eSK = pickle.load(fp)
  
     return sPK, sPK1, sPK2s, ePK, sSK, sSK1, sSK2, eSK

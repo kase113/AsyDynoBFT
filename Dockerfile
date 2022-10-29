@@ -19,12 +19,25 @@ RUN apt-get -y  update \
 #ENV K 1
 #ENV id 0
 
+# 清华源，解决超时问题
+RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+RUN pip3 config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+
+## 或：
+## 阿里源
+#pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
+## 腾讯源
+#pip config set global.index-url http://mirrors.cloud.tencent.com/pypi/simple
+## 豆瓣源
+#pip config set global.index-url http://pypi.douban.com/simple/
+
 RUN python -m pip install --upgrade pip
 
 # 4.安装基础包
-RUN pip3 install pyparsing==2.4.6
+RUN pip3 install pyparsing==2.4.0
 RUN pip3 install --upgrade setuptools && pip3 install --upgrade greenlet
-RUN pip3 install PySocks ecdsa zfec gipc pycrypto numpy coincurve
+RUN pip3 install PySocks ecdsa zfec gipc pycrypto numpy coincurve hypothesis
+
 
 # 5.编译安装GMP
 RUN wget --no-check-certificate https://gmplib.org/download/gmp/gmp-5.1.3.tar.bz2
@@ -34,7 +47,7 @@ RUN tar -jxvf gmp-5.1.3.tar.bz2 && cd gmp-5.1.3 &&./configure && make && make in
 RUN wget --no-check-certificate https://crypto.stanford.edu/pbc/files/pbc-0.5.14.tar.gz \
     && tar -zxvf pbc-0.5.14.tar.gz \
     && cd pbc-0.5.14 && ./configure \
-    && make && make install && cd .. \
+    && make && make install && cd ..
 
 RUN export LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib
 RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
