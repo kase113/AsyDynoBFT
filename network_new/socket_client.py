@@ -81,6 +81,8 @@ class NetworkClient (Process):
         # print('this is my port and j', self.port, j)
         if self.ip == '127.0.0.1':
             sock.bind((self.ip, self.port + j + 1))
+        else:
+            sock.bind((self.ip, self.port + j + 1))
         try:
             sock.connect(self.addresses_list[j])
             self.socks[j] = sock
