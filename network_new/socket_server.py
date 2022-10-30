@@ -85,7 +85,7 @@ class NetworkServer (Process):
         # return int((address[1] - 10000) / 200)
         return int((address[1] - 10000) / 500)
     def _address_to_id_new(self, address: tuple):
-        return int((address[1] - 20000) / 500)
+        return int((address[1] - 20000) / 100)
 
     def _set_server_logger(self, id: int):
         logger = logging.getLogger("node-" + str(id))
