@@ -41,12 +41,12 @@ class NetworkServer (Process):
         def _handler(sock, address):
             #jid = self._address_to_id(address)
             jid = self._address_to_id_new(address)
-            self.logger.info('hava recv jid %s' % (str(jid)))
+            # self.logger.info('hava recv jid %s' % (str(jid)))
             buf = b''
             try:
                 while not self.stop.value:
                     buf += sock.recv(2_000_000)
-                    self.logger.info('hava running recv')
+                    # self.logger.info('hava running recv')
                     tmp = buf.split(self.SEP, 1)
                     while len(tmp) == 2:
                         buf = tmp[1]
@@ -55,7 +55,7 @@ class NetworkServer (Process):
                             (j, o) = (jid, pickle.loads(data))
                             # assert j in range(self.N)
                             self.server_to_bft((j, o))
-                            self.logger.info('recv' + str((j, o)))
+                            # self.logger.info('recv' + str((j, o)))
                             # print('server recv' + str((j, o)))
                         else:
                             self.logger.error('syntax error messages')
