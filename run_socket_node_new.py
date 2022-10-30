@@ -81,6 +81,8 @@ if __name__ == '__main__':
                         help='whether to omit the fast path', type=bool, default=False)
     parser.add_argument('--BP', metavar='BP',required=False,
                         help='batch processing', type=bool, default=True)
+    parser.add_argument('--L', metavar='L', required=False,
+                        help='amount of all record logger', type=int, default=12)
     args = parser.parse_args()
 
     # Some parameters
@@ -101,6 +103,7 @@ if __name__ == '__main__':
     O = args.O
     per = args.per
     BP = args.BP
+    L = args.L
 
     shard = int(N/MR) # amount of each shard
 
@@ -152,7 +155,7 @@ if __name__ == '__main__':
         # net_server = NetworkServer(my_address[1], my_address[0], i, R, N, addresses, server_to_bft, server_ready, stop)
         # net_client = NetworkClient(my_address[1], my_address[0], i, R, N, addresses, client_from_bft, client_ready, stop, bft_running, dynamic=False)
         net_server = NetworkServer(my_address[1], my_address[0], i, R, shard, addresses, server_to_bft, server_ready, stop)
-        net_client = NetworkClient(my_address[1], my_address[0], i, R, shard, addresses, client_from_bft, client_ready, stop, bft_running, dynamic=False)
+        net_client = NetworkClient(my_address[1], my_address[0], i, R, L, shard, addresses, client_from_bft, client_ready, stop, bft_running, dynamic=False)
         bft = instantiate_bft_node(sid, i, B, N, f, per, K, R, MR, BP, S, T, bft_from_server, bft_to_client, net_ready, stop, P, M, F, D, O, bft_running)
         #print(O) 
         net_server.start() 
