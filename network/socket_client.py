@@ -40,6 +40,8 @@ class NetworkClient (Process):
         self.TIME = 1000
         self.BYTES = 625_000
         self.DELAY = 100
+        
+        self.account = 0
 
         self.network_condition = True
         self.DYNAMIC = dynamic
@@ -166,9 +168,11 @@ class NetworkClient (Process):
         while not self.stop.value:
             try:
                 j, o = self.client_from_bft()
+                self.account+=1
                 #o = self.send_queue[j].get_nowait()
                 #print('send' + str((j, o)))
-                self.logger.info('send' + str((j, o)))
+                #self.logger.info('send' + str((j, o)))
+                self.logger.info('this is the send account %d' % (int(self.account)))
                 try:
                     #self._send(j, pickle.dumps(o))
                     if j == -1: # -1 means broadcast
