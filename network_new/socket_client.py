@@ -17,7 +17,7 @@ class NetworkClient (Process):
 
     SEP = '\r\nSEP\r\nSEP\r\nSEP\r\n'.encode('utf-8')
 
-    def __init__(self, port: int, my_ip: str, id: int, R: int, shard: int, addresses_list: list, client_from_bft: Callable, client_ready: mpValue, stop: mpValue, bft_running: mpValue = mpValue(c_bool, False), dynamic=True):
+    def __init__(self, port: int, my_ip: str, id: int, R: int, L:int, shard: int, addresses_list: list, client_from_bft: Callable, client_ready: mpValue, stop: mpValue, bft_running: mpValue = mpValue(c_bool, False), dynamic=True):
 
         self.bft_running = bft_running
 
@@ -44,6 +44,7 @@ class NetworkClient (Process):
         self.DELAY = 100
         
         self.account = 0
+        self.account_log = L
 
         self.network_condition = True
         self.DYNAMIC = dynamic
@@ -177,7 +178,12 @@ class NetworkClient (Process):
                 # print('send' + str((j, o)))
                 # self.logger.info('send' + str((j, o)))
                 self.account+=1
-                self.logger.info('this is the send account %d' % (int(self.account)))
+                if (int(self.id)%self.account_log) == 0:
+                    self.logger.info('this is the send account %d' % (int(self.account)))
+                else:
+                    if self.account % 10 == 0:
+                        self.logger.info('this is the send account %d' % (int(self.account)))
+                # self.logger.info('this is the send account %d' % (int(self.account)))
                 try:
                     #self._send(j, pickle.dumps(o))
                     if j == -1: # -1 means broadcast
