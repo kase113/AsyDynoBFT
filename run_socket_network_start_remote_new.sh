@@ -26,18 +26,18 @@ if [ $beginNum -eq 0 ]; then
   touch hosts.config
   i=$beginNum
   while [ "$i" -lt $((hosts1endNum + 1)) ]; do
-    echo $i $hosts1 $hosts1 $((20000 + $((500 * $i)))) >>hosts.config
-    echo "---- 写入第【$i】个节点的hosts.config文件：$i $hosts1 $hosts1 $((20000 + $((500 * $i)))) ----"
+    echo $i $hosts1 $hosts1 $((20000 + $((100 * $i)))) >>hosts.config
+    echo "---- 写入第【$i】个节点的hosts.config文件：$i $hosts1 $hosts1 $((20000 + $((100 * $i)))) ----"
     i=$((i + 1))
   done
   while [ "$i" -lt $((hosts2endNum + 1)) ]; do
-    echo $i $hosts2 $hosts2 $((20000 + $((500 * $i)))) >>hosts.config
-    echo "---- 写入第【$i】个节点的hosts.config文件：$i $hosts2 $hosts2 $((20000 + $((500 * $i)))) ----"
+    echo $i $hosts2 $hosts2 $((20000 + $((100 * $i)))) >>hosts.config
+    echo "---- 写入第【$i】个节点的hosts.config文件：$i $hosts2 $hosts2 $((20000 + $((100 * $i)))) ----"
     i=$((i + 1))
   done
   while [ "$i" -lt $N ]; do
-    echo $i $hosts3 $hosts3 $((20000 + $((500 * $i)))) >>hosts.config
-    echo "---- 写入第【$i】个节点的hosts.config文件：$i $hosts3 $hosts3 $((20000 + $((500 * $i)))) ----"
+    echo $i $hosts3 $hosts3 $((20000 + $((100 * $i)))) >>hosts.config
+    echo "---- 写入第【$i】个节点的hosts.config文件：$i $hosts3 $hosts3 $((20000 + $((100 * $i)))) ----"
     i=$((i + 1))
   done
 #  # 3.4.远程拷贝密钥到其他服务器

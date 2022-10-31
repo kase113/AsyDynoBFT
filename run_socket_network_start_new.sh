@@ -21,8 +21,8 @@ i=0
 k=10
 while [ "$i" -lt $N ]; do
   j=$((i / 256))
-  echo $i 172.10$j.0.$k 172.10$j.0.$k $((10000 + $((200 * $i)))) >>hosts.config
-  echo "---- 写入第【$i】个节点的hosts.config文件：$i 172.10$j.0.$k 172.10$j.0.$k $((10000 + $((200 * $i)))) ----"
+  echo $i 172.10$j.0.$k 172.10$j.0.$k $((10000 + $((100 * $i)))) >>hosts.config
+  echo "---- 写入第【$i】个节点的hosts.config文件：$i 172.10$j.0.$k 172.10$j.0.$k $((10000 + $((100 * $i)))) ----"
   i=$((i + 1))
   k=$((k + 1))
 done
@@ -77,11 +77,11 @@ mkdir -p /home/lzh/workspace/data/logs/$IMAGE_NAME/$P/$N-$f-$B-$K
 while [ "$i" -lt $N ]; do
   # 5.1.计算容器属于哪个网桥
   bridge_index=$((i / 256))
-  echo "---- 正在启动第【$i】个容器，容器名称【$IMAGE_NAME-$i】，容器IP【172.10$bridge_index.0.$k:$((10000 + $((200 * $i))))】 ----"
+  echo "---- 正在启动第【$i】个容器，容器名称【$IMAGE_NAME-$i】，容器IP【172.10$bridge_index.0.$k:$((10000 + $((100 * $i))))】 ----"
 
   if [ $MR -eq 0 ]; then
     docker run --cpus=2 -m 4096m --rm -itd --name $IMAGE_NAME-$i --network=bft-network-$bridge_index --ip 172.10$bridge_index.0.$k \
-      -p $((10000 + $((200 * $i)))):$((10000 + $((200 * $i)))) \
+      -p $((10000 + $((100 * $i)))):$((10000 + $((100 * $i)))) \
       -v /home/lzh/workspace/data/keys:/home/keys \
       -v /home/lzh/workspace/data/logs/$IMAGE_NAME/$P/$N-$f-$B-$K:/home/log \
       $IMAGE_NAME:$IMAGE_TAG /bin/bash -c "nohup python3 run_socket_node_new.py --sid 'sidA' --id $i --N $N --f $f --B $B --K $K --P $P > /home/log/$IMAGE_NAME-$i.out"
@@ -90,7 +90,7 @@ while [ "$i" -lt $N ]; do
     shard_index=$((i / ($N / MR)))
     echo "---- 第【$i】个容器属于第【$shard_index】个分片，MR=$MR ----"
     docker run --cpus=2 -m 4096m --rm -itd --name $IMAGE_NAME-$i --network=bft-network-$bridge_index --ip 172.10$bridge_index.0.$k \
-      -p $((10000 + $((200 * $i)))):$((10000 + $((200 * $i)))) \
+      -p $((10000 + $((100 * $i)))):$((10000 + $((100 * $i)))) \
       -v /home/lzh/workspace/data/keys:/home/keys \
       -v /home/lzh/workspace/data/logs/$IMAGE_NAME/$P/$N-$f-$B-$K:/home/log \
       $IMAGE_NAME:$IMAGE_TAG /bin/bash -c "nohup python3 run_socket_node_new.py --sid 'sidA' --id $i --N $N --f $f --B $B --K $K --P $P --R $shard_index --MR $MR  --per $per > /home/log/$IMAGE_NAME-$i.out"
