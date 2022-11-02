@@ -179,10 +179,10 @@ class NetworkClient (Process):
                 # self.logger.info('send' + str((j, o)))
                 self.account+=1
                 if (int(self.id)%self.account_log) == 0:
-                    self.logger.info('this is the send account %d' % (int(self.account)))
+                    self.logger.info('this is the send account %d and round %s' % (int(self.account), str(o[0])))
                 else:
                     if self.account % 10 == 0:
-                        self.logger.info('this is the send account %d' % (int(self.account)))
+                        self.logger.info('this is the send account %d and round %s' % (int(self.account), str(o[0])))
                 # self.logger.info('this is the send account %d' % (int(self.account)))
                 try:
                     #self._send(j, pickle.dumps(o))
