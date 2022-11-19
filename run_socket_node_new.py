@@ -13,6 +13,8 @@ from myexperiements.sockettest.rbcbdt_node import RbcBdtBFTNode
 from myexperiements.sockettest.hbbft_node import HoneyBadgerBFTNode
 from myexperiements.sockettest.rotatinghotstuff_node import RotatingHotstuffBFTNode
 from myexperiements.sockettest.hbbft_node_shard import HoneyBadgerBFTNode_shard
+from myexperiements.sockettest.ng_k_s_node import NGSNode
+from myexperiements.sockettest.dl_bmr_sockets_node import DL2Node
 from myexperiements.sockettest.hbbft_node_shard_new import HoneyBadgerBFTNode_shard_new
 from network_new.socket_server import NetworkServer
 from network_new.socket_client import NetworkClient
@@ -21,7 +23,7 @@ from ctypes import c_bool
  
  
 def instantiate_bft_node(sid, i, B, N, f, per, K, R, MR, BP, S, T, bft_from_server: Callable, bft_to_client: Callable, ready: mpValue,
-                         stop: mpValue, protocol="hbbft_shard_new", mute=False, F=100, debug=False, omitfast=False, bft_running: mpValue=mpValue(c_bool, False)):
+                         stop: mpValue, protocol="hbbft_shard_new", mute=False, F=100, debug=False, omitfast=False, bft_running: mpValue=mpValue(c_bool, False), countpoint=0):
     bft = None
     if protocol == 'dumbo':
         bft = DumboBFTNode(sid, i, B, N, f, bft_from_server, bft_to_client, ready, stop, K, mute=mute, debug=debug, bft_running=bft_running)
@@ -37,6 +39,8 @@ def instantiate_bft_node(sid, i, B, N, f, per, K, R, MR, BP, S, T, bft_from_serv
     #     bft = HoneyBadgerBFTNode_shard(sid, i, B, N, f, bft_from_server, bft_to_client, ready, stop, K, R, MR, mute=mute, debug=debug, bft_running=bft_running)
     elif protocol == "hbbft_shard_new":
         bft = HoneyBadgerBFTNode_shard_new(sid, i, B, N, f, per, bft_from_server, bft_to_client, ready, stop, K, R, MR, BP, mute=mute, debug=debug, bft_running=bft_running)
+    elif protocol == "dumbong":
+        bft = NGSNode(sid, i, S, B, F, N, f, bft_from_server, bft_to_client, ready, stop, mute=mute, countpoint=countpoint)
     else:
         print("Only support dumbo or mule or stable-hs or rotating-hs")
     return bft
