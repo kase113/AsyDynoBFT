@@ -12,6 +12,7 @@ from myexperiements.sockettest.rbcbdt_node import RbcBdtBFTNode
 from myexperiements.sockettest.hbbft_node import HoneyBadgerBFTNode
 from myexperiements.sockettest.rotatinghotstuff_node import RotatingHotstuffBFTNode
 from myexperiements.sockettest.hbbft_node_shard import HoneyBadgerBFTNode_shard
+from myexperiements.sockettest.ng_k_s_node import NGSNode
 from network.socket_server import NetworkServer
 from network.socket_client import NetworkClient
 from multiprocessing import Value as mpValue, Queue as mpQueue
@@ -19,7 +20,7 @@ from ctypes import c_bool
  
  
 def instantiate_bft_node(sid, i, B, N, f, K, R, S, T, bft_from_server: Callable, bft_to_client: Callable, ready: mpValue,
-                         stop: mpValue, protocol="hbbft", mute=False, F=100, debug=False, omitfast=False, bft_running: mpValue=mpValue(c_bool, False)):
+                         stop: mpValue, protocol="hbbft", mute=False, F=100, debug=False, omitfast=False, bft_running: mpValue=mpValue(c_bool, False),countpoint=0):
     bft = None
     if protocol == 'dumbo':
         bft = DumboBFTNode(sid, i, B, N, f, bft_from_server, bft_to_client, ready, stop, K, mute=mute, debug=debug, bft_running=bft_running)
@@ -34,6 +35,8 @@ def instantiate_bft_node(sid, i, B, N, f, K, R, S, T, bft_from_server: Callable,
         bft = HoneyBadgerBFTNode(sid, i, B, N, f, bft_from_server, bft_to_client, ready, stop, K, mute=mute, debug=debug, bft_running=bft_running)
     elif protocol == "hbbft_shard":
         bft = HoneyBadgerBFTNode_shard(sid, i, B, N, f, bft_from_server, bft_to_client, ready, stop, K, R, MR, mute=mute, debug=debug, bft_running=bft_running)
+    elif protocol == "dumbong":
+        bft = NGSNode(sid, i, S, B, F, N, f, bft_from_server, bft_to_client, ready, stop, mute=mute, countpoint=countpoint)
     else:
         print("Only support dumbo or mule or stable-hs or rotating-hs")
     return bft
