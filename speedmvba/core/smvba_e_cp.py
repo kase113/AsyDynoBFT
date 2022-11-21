@@ -42,7 +42,11 @@ def speedmvba(sid, pid, N, f, PK, SK, PK2s, SK2, input, decide, receive, send, p
     :param sid: session identifier
     :param pid: my id number
     :param N: the number of parties
+<<<<<<< HEAD
     :param f: the number of byzantine parties 
+=======
+    :param f: the number of byzantine parties
+>>>>>>> 8af7b2a20ad6b3034d35e40e1f35d3271ced0122
     :param PK: ``boldyreva.TBLSPublicKey`` with threshold f+1
     :param SK: ``boldyreva.TBLSPrivateKey`` with threshold f+1
     :param PK1: ``boldyreva.TBLSPublicKey`` with threshold n-f

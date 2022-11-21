@@ -14,7 +14,10 @@ from myexperiements.sockettest.hbbft_node import HoneyBadgerBFTNode
 from myexperiements.sockettest.rotatinghotstuff_node import RotatingHotstuffBFTNode
 from myexperiements.sockettest.hbbft_node_shard import HoneyBadgerBFTNode_shard
 from myexperiements.sockettest.ng_k_s_node import NGSNode
+<<<<<<< HEAD
 from myexperiements.sockettest.dl_bmr_sockets_node import DL2Node
+=======
+>>>>>>> 8af7b2a20ad6b3034d35e40e1f35d3271ced0122
 from myexperiements.sockettest.hbbft_node_shard_new import HoneyBadgerBFTNode_shard_new
 from network_new.socket_server import NetworkServer
 from network_new.socket_client import NetworkClient
