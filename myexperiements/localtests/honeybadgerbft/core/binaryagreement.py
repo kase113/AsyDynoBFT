@@ -2,6 +2,7 @@ from gevent import monkey; monkey.patch_all(thread=False)
 
 import gevent
 from gevent.event import Event
+import time
 from collections import defaultdict
 import logging
 from honeybadgerbft.exceptions import RedundantMessageError, AbandonedNodeError
@@ -74,6 +75,7 @@ def binaryagreement(sid, pid, N, f, coin, input, decide, receive, send):
     :param receive: receive channel
     """
 
+    aba_start = time.time()
     # Messages received are routed to either a shared coin, the broadcast, or AUX
     est_values = defaultdict(lambda: [set(), set()])
     aux_values = defaultdict(lambda: [set(), set()])
@@ -236,22 +238,22 @@ def binaryagreement(sid, pid, N, f, coin, input, decide, receive, send):
                      extra={'nodeid': pid, 'epoch': r})
 
         # CONF phase
-        logger.debug(
-            f'block until at least N-f ({N-f}) CONF values are received',
-            extra={'nodeid': pid, 'epoch': r})
-        if not conf_sent[r][tuple(values)]:
-            values = wait_for_conf_values(
-                pid=pid,
-                N=N,
-                f=f,
-                epoch=r,
-                conf_sent=conf_sent,
-                bin_values=bin_values,
-                values=values,
-                conf_values=conf_values,
-                bv_signal=bv_signal,
-                broadcast=broadcast,
-            )
+        # logger.debug(
+        #     f'block until at least N-f ({N-f}) CONF values are received',
+        #     extra={'nodeid': pid, 'epoch': r})
+        # if not conf_sent[r][tuple(values)]:
+        #     values = wait_for_conf_values(
+        #         pid=pid,
+        #         N=N,
+        #         f=f,
+        #         epoch=r,
+        #         conf_sent=conf_sent,
+        #         bin_values=bin_values,
+        #         values=values,
+        #         conf_values=conf_values,
+        #         bv_signal=bv_signal,
+        #         broadcast=broadcast,
+        #     )
 
         logger.debug(f'Completed CONF phase with values = {values}',
                      extra={'nodeid': pid, 'epoch': r})
@@ -275,6 +277,9 @@ def binaryagreement(sid, pid, N, f, coin, input, decide, receive, send):
                 s=s,
                 already_decided=already_decided,
                 decide=decide,
+                aba_start=aba_start,
+                N=N,
+                pid=pid
             )
             # print('debug then decided:', already_decided, '%s' % sid)
         except AbandonedNodeError:
@@ -283,12 +288,13 @@ def binaryagreement(sid, pid, N, f, coin, input, decide, receive, send):
             logger.debug(f'QUIT!',
                          extra={'nodeid': pid, 'epoch': r})
             _thread_recv.kill()
+            
             return
 
         r += 1
 
 
-def set_new_estimate(*, values, s, already_decided, decide):
+def set_new_estimate(*, values, s, already_decided, decide,aba_start,N,pid):
     if len(values) == 1:
         v = next(iter(values))
         if v == s:
@@ -303,6 +309,9 @@ def set_new_estimate(*, values, s, already_decided, decide):
                 # party is a party who has decided but no enough
                 # peers to help him end the loop.  Lemma: # of
                 # abandoned party <= t
+                aba_end = time.time()
+                print('time cost in aba phase:', aba_start-aba_end,'s')
+                print('Node number is:', N,'and pid is:',pid)
                 raise AbandonedNodeError
         est = v
     else:

@@ -1,11 +1,13 @@
 import json
 import traceback, time
 import gevent
+import secrets
 import numpy as np 
 from collections import namedtuple, deque
 from enum import Enum
 from gevent.queue import Queue
 from honeybadgerbft.core.commoncoin import shared_coin
+# from honeybadgerbft.core.commoncoin_new import shared_coin
 from honeybadgerbft.core.binaryagreement import binaryagreement
 from honeybadgerbft.core.reliablebroadcast import reliablebroadcast
 from honeybadgerbft.core.commonsubset import commonsubset
@@ -183,6 +185,7 @@ class HoneyBadgerBFT():
 
             if self.logger != None:
                 self.logger.info('ACS Block Delay at Round %d at Node %d: ' % (self.id, r) + str(end - start))
+                self.logger.info('this Node number %d ' % self.N )
 
             # Remove output transactions from the backlog buffer
             for _tx in tx_to_send:
@@ -193,6 +196,7 @@ class HoneyBadgerBFT():
             #if self.logger != None:
             #    self.logger.info('Backlog Buffer at Node %d:' % self.id + str(self.transaction_buffer))
 
+            print('this is the self.round:',self.round)
             self.round += 1     # Increment the round
             if self.round >= self.K:
                 break   # Only run one round for now
@@ -252,8 +256,12 @@ class HoneyBadgerBFT():
 
             coin_recvs[j] = Queue()
             coin = shared_coin(sid + 'COIN' + str(j), pid, N, f,
-                               self.sPK, self.sSK,
+                               self.sPK, self.sSK,self.round,
                                coin_bcast, coin_recvs[j].get)
+            # random_bytes = secrets.token_hex(128 // 2 + 1)
+            # random_number = int(random_bytes, 16)
+            # coin = random_number % 2
+            
 
             def aba_send(k, o):
                 """Binary Byzantine Agreement multicast operation.
@@ -315,9 +323,14 @@ class HoneyBadgerBFT():
                           tpke_bcast=tpke_bcast, tpke_recv=tpke_recv.get)
 
         block = set()
+        # 这是原版
+        # for batch in _output:
+        #     decoded_batch = (batch.decode())
+        #     for tx in decoded_batch:
+        #         block.add(tx)
+        
+        # 这是改版
         for batch in _output:
-            decoded_batch = (batch.decode())
-            for tx in decoded_batch:
-                block.add(tx)
+            block.add(batch)
 
         return list(block)

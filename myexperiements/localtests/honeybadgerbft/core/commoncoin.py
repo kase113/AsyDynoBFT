@@ -15,12 +15,13 @@ class CommonCoinFailureException(Exception):
     """Raised for common coin failures."""
     pass
 
+round_coin = [1, 0, 0, 0, 1, 1, 1, 0, 0, 1] 
 
 def hash(x):
     return hashlib.sha256(x).digest()
 
 
-def shared_coin(sid, pid, N, f, PK, SK, broadcast, receive, single_bit=True, logger=None):
+def shared_coin(sid, pid, N, f, PK, SK, round, broadcast, receive, single_bit=True, logger=None):
     """A shared coin based on threshold signatures
 
     :param sid: a unique instance id
@@ -45,6 +46,7 @@ def shared_coin(sid, pid, N, f, PK, SK, broadcast, receive, single_bit=True, log
 
             # New shares for some round r, from sender i
             (i, (_, r, raw_sig)) = receive()
+            # print('this is the round from recv', r)
             sig = g12deserialize(raw_sig)
 
             assert i in range(N)
@@ -73,22 +75,26 @@ def shared_coin(sid, pid, N, f, PK, SK, broadcast, receive, single_bit=True, log
             # After reaching the threshold, compute the output and
             # make it available locally
 
+            # if len(received[r]) == f + 1:
+
+            #     # Verify and get the combined signature
+            #     sigs = dict(list(received[r].items())[:f+1])
+            #     sig = PK.combine_shares(sigs)
+            #     assert PK.verify_signature(sig, h)
+
+            #     # Compute the bit from the least bit of the hash
+            #     coin = hash(g12serialize(sig))[0]
+            #     if single_bit:
+            #         bit = coin % 2
+
+            #         outputQueue[r].put_nowait(bit)
+            #     else:
+
+            #         outputQueue[r].put_nowait(coin)
             if len(received[r]) == f + 1:
-
-                # Verify and get the combined signature
-                sigs = dict(list(received[r].items())[:f+1])
-                sig = PK.combine_shares(sigs)
-                assert PK.verify_signature(sig, h)
-
-                # Compute the bit from the least bit of the hash
-                coin = hash(g12serialize(sig))[0]
-                if single_bit:
-                    bit = coin % 2
-
-                    outputQueue[r].put_nowait(bit)
-                else:
-
-                    outputQueue[r].put_nowait(coin)
+                coin = round_coin[r]
+                print('this is the round:',round, 'and this is the coin:',coin)
+                outputQueue[r].put_nowait(coin)
 
     #greenletPacker(Greenlet(_recv), 'shared_coin', (pid, N, f, broadcast, receive)).start()
     Greenlet(_recv).start()
@@ -116,5 +122,26 @@ def shared_coin(sid, pid, N, f, PK, SK, broadcast, receive, single_bit=True, log
         coin = outputQueue[round].get()
         #print('debug', 'node %d gets a coin %d for round %d in %s' % (pid, coin, round, sid))
         return coin
-
+        
+        return 1
+        # import secrets
+        # print('this is the coin',coin)
+        # random_bytes = secrets.token_hex(128 // 2 + 1)
+        # random_number = int(random_bytes,16)
+        # new_coin = random_number % 2
+        
+        return new_coin
+    
+    def get_fakeCoin(round):
+        import secrets
+        # print('this is the coin',coin)
+        random_bytes = secrets.token_hex(128 // 2 + 1)
+        random_number = int(random_bytes,16)
+        new_coin = random_number % 2
+        print('this is the new_coin', new_coin,'pid is:', pid,'round is:', round)
+         
+        return 1
+        
+    # print('this is the getCoin:',getCoin)
     return getCoin
+    # return get_fakeCoin

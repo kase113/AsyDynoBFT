@@ -174,6 +174,7 @@ def reliablebroadcast(sid, pid, N, f, leader, input, receive, send):
         the leader.
 
     """
+    rbc_start = time.time()
     assert N >= 3*f + 1
     assert f >= 0
     assert 0 <= leader < N
@@ -275,6 +276,9 @@ def reliablebroadcast(sid, pid, N, f, leader, input, receive, send):
                 broadcast(('READY', roothash))
 
             if len(ready[roothash]) >= OutputThreshold and echoCounter[roothash] >= K:
+                rbc_end = time.time()
+                print('time cost in rbc phase:', rbc_end-rbc_start,'s')
+                print('Node number is:', N)
                 return decode_output(roothash)
 
         elif msg[0] == 'READY':
@@ -294,4 +298,7 @@ def reliablebroadcast(sid, pid, N, f, leader, input, receive, send):
                 broadcast(('READY', roothash))
 
             if len(ready[roothash]) >= OutputThreshold and echoCounter[roothash] >= K:
+                rbc_end = time.time()
+                print('time cost in rbc phase:', rbc_end-rbc_start,'s')
+                print('Node number is:', N,'and pid is:',pid)
                 return decode_output(roothash)

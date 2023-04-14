@@ -82,53 +82,58 @@ def honeybadger_block(pid, N, f, PK, SK, propose_in, acs_put_in, acs_get_out, tp
 
     # Wait for the corresponding ACS to finish
     vall = acs_get_out()
-
+    wall = []
+    for item in vall:
+        if item is not None:
+            wall.append(1)
+            
     #TODO: here skip the following checks since ACS might not return N-f values
     assert len(vall) == N
     assert len([_ for _ in vall if _ is not None]) >= N - f  # This many must succeed
 
-    # Broadcast all our decryption shares
-    my_shares = []
-    for i, v in enumerate(vall):
-        if v is None:
-            my_shares.append(None)
-            continue
-        (tkey, ciph) = pickle.loads(v)
-        tkey = deserialize_UVW(*tkey)
-        share = SK.decrypt_share(*tkey)
-        # share is of the form: U_i, an element of group1
-        my_shares.append(share)
+    # # Broadcast all our decryption shares
+    # my_shares = []
+    # for i, v in enumerate(vall):
+    #     if v is None:
+    #         my_shares.append(None)
+    #         continue
+    #     (tkey, ciph) = pickle.loads(v)
+    #     tkey = deserialize_UVW(*tkey)
+    #     share = SK.decrypt_share(*tkey)
+    #     # share is of the form: U_i, an element of group1
+    #     my_shares.append(share)
 
-    tpke_bcast([tpke_serialize(share) for share in my_shares])
+    # tpke_bcast([tpke_serialize(share) for share in my_shares])
 
-    # Receive everyone's shares
-    shares_received = {}
-    while len(shares_received) < f+1:
+    # # Receive everyone's shares
+    # shares_received = {}
+    # while len(shares_received) < f+1:
 
-        (j, raw_shares) = tpke_recv()
-        shares = [tpke_deserialize(share) for share in raw_shares]
-        if j in shares_received:
-            # TODO: alert that we received a duplicate
-            print('Received a duplicate decryption share from', j)
-            continue
-        shares_received[j] = shares
+    #     (j, raw_shares) = tpke_recv()
+    #     shares = [tpke_deserialize(share) for share in raw_shares]
+    #     if j in shares_received:
+    #         # TODO: alert that we received a duplicate
+    #         print('Received a duplicate decryption share from', j)
+    #         continue
+    #     shares_received[j] = shares
 
-    assert len(shares_received) >= f+1
-    # TODO: Accountability
-    # If decryption fails at this point, we will have evidence of misbehavior,
-    # but then we should wait for more decryption shares and try again
-    decryptions = []
-    for i, v in enumerate(vall):
-        if v is None:
-            continue
-        svec = {}
-        for j, shares in shares_received.items():
-            svec[j] = shares[i]     # Party j's share of broadcast i
-        (tkey, ciph) = pickle.loads(v)
-        tkey = deserialize_UVW(*tkey)
-        key = PK.combine_shares(*tkey, svec)
-        plain = tpke.decrypt(key, ciph)
-        decryptions.append(plain)
-    #print('Done!', decryptions)
+    # assert len(shares_received) >= f+1
+    # # TODO: Accountability
+    # # If decryption fails at this point, we will have evidence of misbehavior,
+    # # but then we should wait for more decryption shares and try again
+    # decryptions = []
+    # for i, v in enumerate(vall):
+    #     if v is None:
+    #         continue
+    #     svec = {}
+    #     for j, shares in shares_received.items():
+    #         svec[j] = shares[i]     # Party j's share of broadcast i
+    #     (tkey, ciph) = pickle.loads(v)
+    #     tkey = deserialize_UVW(*tkey)
+    #     key = PK.combine_shares(*tkey, svec)
+    #     plain = tpke.decrypt(key, ciph)
+    #     decryptions.append(plain)
+    # #print('Done!', decryptions)
+    decryptions = [1] * N
 
     return tuple(decryptions)
